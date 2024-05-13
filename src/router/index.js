@@ -14,12 +14,12 @@ const routes = [
     path: '/:catchAll(.*)', // すべてのパスにマッチ
     redirect: (to) => {
       // リダイレクト先のパスを動的に生成
-      if (to.params.tagNumber && to.path.startsWith('/tag/')) {
+      if (to.params.tagNumber) {
         // /tag/パスにアクセスされ、かつtagNumberが指定されている場合
-        return to.fullPath;
-      } else if (to.params.ItemName && to.path.startsWith('/name/')) {
+        return `/tag/${to.params.tagNumber}`;
+      } else if (to.params.ItemName) {
         // /name/パスにアクセスされ、かつItemNameが指定されている場合
-        return to.fullPath;
+        return `/name/${to.params.ItemName}`;
       } else {
         // それ以外の場合はデフォルトのパスにリダイレクト
         return `/tag/${defaultTagNumber}`;
