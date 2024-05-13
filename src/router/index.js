@@ -3,15 +3,24 @@ import Itemlist from './components/Itemlist.vue'
 
 const routes = [
   { path: '/', component: App },
-  { path: '/tag/:tagNumber', component: Itemlist, props: true },
-  { path: '/name/:ItemName', component: Itemlist, props: true },
-  // リダイレクトを追加
-  { path: '/tag/:oldParam', redirect: to => {
-      return { path: `/tag/${to.params.oldParam}` }
+  // リダイレクト先に変数を渡してリダイレクトする
+  { path: '/old-route/:oldParam', redirect: to => {
+      if (to.params.oldParam.startsWith('tag')) {
+        const tagNumber = to.params.oldParam.split('tag')[1];
+        return { path: `/tag/${tagNumber}` };
+      } else if (to.params.oldParam.startsWith('name')) {
+        const ItemName = to.params.oldParam.split('name')[1];
+        return { path: `/name/${ItemName}` };
+      } else {
+        // リダイレクト先が不明な場合はトップページにリダイレクト
+        return { path: '/' };
+      }
     }
   },
-  // 未定義のルートへのリダイレクト
-  { path: '/:pathMatch(.*)', redirect: '/' },
+  // その他のルート
+  { path: '/tag/:tagNumber', component: Itemlist, props: true },
+  { path: '/name/:ItemName', component: Itemlist, props: true },
+  { path: '/:pathMatch(.*)', redirect: '/' }, // 未定義のルートへのリダイレクト
 ]
 
 const router = createRouter({
