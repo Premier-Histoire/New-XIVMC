@@ -9,8 +9,8 @@ import 'bootstrap';
 
 const routes = [
   { path: '/', component: App },
-  { path: '/tag/:tagNumber', component: Itemlist, props: true, redirect: '/' },
-  { path: '/name/:ItemName', component: Itemlist, props: true, redirect: '/' },
+  { path: '/tag/:tagNumber', component: Itemlist, props: true},
+  { path: '/name/:ItemName', component: Itemlist, props: true},
 ]
 
 const router = createRouter({
