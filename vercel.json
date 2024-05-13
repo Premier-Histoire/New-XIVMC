@@ -9,14 +9,6 @@
       "src": "/name/:ItemName",
       "status": 200,
       "dest": "/index.html"
-    },
-    {
-      "handle": "filesystem"
-    },
-    {
-      "src": "/",
-      "status": 200,
-      "dest": "/index.html"
     }
   ]
 }
