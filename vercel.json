@@ -1,8 +1,0 @@
-{
-    "rewrites": [
-      { "source": "/tag/(.*)", "destination": "/tag/$1" },
-      { "source": "/name/(.*)", "destination": "/name/$1" },
-      { "source": "/tag/", "destination": "/" },
-      { "source": "/name/", "destination": "/" }
-    ]
-  }

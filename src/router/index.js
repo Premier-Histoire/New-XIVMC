@@ -3,11 +3,8 @@ import Itemlist from './components/Itemlist.vue'
 
 const routes = [
   { path: '/', component: App },
-  { path: '/tag/:tagNumber', component: Itemlist, props: true },
-  { path: '/name/:ItemName', component: Itemlist, props: true },
-  // 追加のルート
-  { path: '/tag/', redirect: '/' },
-  { path: '/name/', redirect: '/' },
+  { path: '/tag/:tagNumber', redirect: '/' },
+  { path: '/name/:ItemName', redirect: '/' },
 ]
 
 const router = createRouter({
