@@ -1,13 +1,22 @@
 {
-    "routes": [
-      {
-        "handle": "filesystem"
-      },
-      {
-        "src": "/(.*)",
-        "status": 200,
-        "dest": "/"
-      }
-    ]
-  }
-  
+  "routes": [
+    {
+      "src": "/tag/:tagNumber",
+      "status": 200,
+      "dest": "/index.html"
+    },
+    {
+      "src": "/name/:ItemName",
+      "status": 200,
+      "dest": "/index.html"
+    },
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
+      "status": 200,
+      "dest": "/index.html"
+    }
+  ]
+}
