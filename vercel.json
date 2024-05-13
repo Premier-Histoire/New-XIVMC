@@ -1,14 +1,6 @@
 {
-  "routes": [
-    {
-      "src": "/tag/:tagNumber",
-      "status": 200,
-      "dest": "/index.html"
-    },
-    {
-      "src": "/name/:ItemName",
-      "status": 200,
-      "dest": "/index.html"
-    }
+  "redirects": [
+    { "source": "/tag/(.*)", "destination": "/", "statusCode": 301 },
+    { "source": "/name/(.*)", "destination": "/", "statusCode": 301 }
   ]
 }
