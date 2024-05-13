@@ -26,16 +26,15 @@
                 </div>
             </div>
             <div class="item-data">
-                <!-- ここにアイテムデータを表示するコンテンツを追加 -->
+                <Treenode :materials="materials"></Treenode>
             </div>
         </div>
         <!-- トップに戻るボタン -->
-        <div class="scroll-top-btn btn btn-primary rounded-circle p-0" style="width:2rem;height:2rem;" v-show="!isTop"
-            @click="scrollToTop">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-caret-up"
+        <div class="scroll-top-btn btn btn-primary rounded-circle" v-show="!isTop" @click="scrollToTop">
+            <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" fill="currentColor" class="bi bi-chevron-up"
                 viewBox="0 0 16 16">
-                <path
-                    d="M3.204 11h9.592L8 5.519 3.204 11zm-.753-.659 4.796-5.48a1 1 0 0 1 1.506 0l4.796 5.48c.566.647.106 1.659-.753 1.659H3.204a1 1 0 0 1-.753-1.659z" />
+                <path fill-rule="evenodd"
+                    d="M7.646 4.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1-.708.708L8 5.707l-5.646 5.647a.5.5 0 0 1-.708-.708l6-6z" />
             </svg>
         </div>
     </div>
@@ -44,10 +43,15 @@
 <script>
 import { mapState } from 'vuex';
 import store from '@/store'; // ストアをインポート
+import Treenode from './Treenode.vue';
 
 export default {
+    components: {
+        Treenode
+    },
     computed: {
-        ...mapState(['Itemdata']) // ストアのItemdataをコンポーネントのItemdataとしてマッピング
+        ...mapState(['Itemdata']), // ストアのItemdataをコンポーネントのItemdataとしてマッピング
+        ...mapState(['materials'])
     },
     data() {
         return {
@@ -60,7 +64,7 @@ export default {
         },
         getImageUrl(icon) {
             const normalizedIcon = String(icon).slice(0, -3) + '000'; // 万と千の桁以下を捨てて020000の形式に変換
-            return `https://xivapi.com/i/0${normalizedIcon}/0${icon}.png`; // XIVAPIから画像を取得
+            return `https://xivapi.com/i/0${normalizedIcon}/0${icon}_hr1.png`; // XIVAPIから画像を取得
         },
         // スクロール位置がトップかどうかをチェックするメソッド
         checkScroll() {
@@ -84,6 +88,16 @@ export default {
                 }
             }, 15); // 15ミリ秒ごとにスクロール
         },
+        copyItemName() {
+            const itemName = this.Itemdata.Name;
+            navigator.clipboard.writeText(itemName)
+                .then(() => {
+                    alert(`${itemName}がクリップボードにコピーされました！`);
+                })
+                .catch(err => {
+                    console.error('テキストのコピーに失敗しました：', err);
+                });
+        }
     },
 };
 </script>
@@ -163,9 +177,7 @@ export default {
 }
 
 .item-data {
-    background-color: red;
     height: 1000px;
-    opacity: 0.3;
     width: 100%;
     flex-grow: 1;
 }
@@ -173,12 +185,13 @@ export default {
 /* トップに戻るボタンのスタイル */
 .scroll-top-btn {
     position: fixed;
-    bottom: 20px;
-    right: 20px;
+    width: 50px;
+    height: 50px;
+    padding: 9px;
+    bottom: 10px;
+    right: 10px;
     cursor: pointer;
     z-index: 1000;
-    /* 他の要素よりも上に表示 */
     transition: opacity 0.3s;
-    /* 不透明度の変化をアニメーション化 */
 }
 </style>

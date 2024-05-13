@@ -3,12 +3,14 @@ import Cookies from 'js-cookie';
 
 // クッキーからデータを読み込む
 const savedItemData = Cookies.get('Itemdata');
+const savedMaterials = Cookies.get('materials');
 
 export default createStore({
   state: {
     sidebarOpen: false,
-    Itemdata: savedItemData ? JSON.parse(savedItemData) : [], // クッキーからデータを読み込む
+    Itemdata: savedItemData ? JSON.parse(savedItemData) : [],
     rightContentVisible: true,
+    materials: savedMaterials ? JSON.parse(savedMaterials) : [] // クッキーからデータを読み込む
   },
   mutations: {
     toggleSidebar(state) {
@@ -21,11 +23,17 @@ export default createStore({
       state.Itemdata = item;
 
       // クッキーにデータを保存
-      Cookies.set('Itemdata', JSON.stringify(item), { expires: 7 }); // クッキーの有効期限を7日に設定
+      Cookies.set('Itemdata', JSON.stringify(item), { expires: 7 });
     },
     toggleRightContentVisibility(state) {
       state.rightContentVisible = !state.rightContentVisible;
     },
+    saveMaterials(state, materials) {
+      state.materials = materials;
+
+      // クッキーにデータを保存
+      Cookies.set('materials', JSON.stringify(materials), { expires: 7 });
+    }
   },
   actions: {
     saveItemData({ commit }, item) {
@@ -34,8 +42,11 @@ export default createStore({
     toggleRightContentVisibility({ commit }) {
       commit('toggleRightContentVisibility');
     },
+    saveMaterials({ commit }, materials) {
+      commit('saveMaterials', materials);
+    }
   },
   getters: {
-    // 必要に応じてゲッターを定義
+
   }
 });

@@ -1,7 +1,8 @@
 <template>
   <div v-if="filteredItems.length > 0">
     <ul ref="itemList" class="item-list">
-      <li v-for="(item, index) in filteredItems" :key="item.ItemId" :class="{ 'last-item': index === filteredItems.length - 1 }" class="list-item" @click="handleItemClick(item)">
+      <li v-for="(item, index) in filteredItems" :key="item.ItemId"
+        :class="{ 'last-item': index === filteredItems.length - 1 }" class="list-item" @click="handleItemClick(item)">
         <div class="item-wrapper">
           <img :src="getImageUrl(item.Icon)" alt="Item Icon">
           <span>{{ item.Name }}</span>
@@ -12,15 +13,19 @@
 </template>
 
 <script>
-import { mapActions } from 'vuex';
-import Itemlist from "../assets/json/Item.json";
+import { mapState } from 'vuex';
+import Itemlist from "@/assets/json/Item.json";
+import RecipeData from '@/assets/json/Recipe.json';
+
 
 export default {
   props: ['tagNumber', 'ItemName'],
   data() {
     return {
       items: Itemlist,
-      filteredItems: []
+      filteredItems: [],
+      recipeData: RecipeData,
+      materials: {}
     };
   },
   watch: {
@@ -57,13 +62,82 @@ export default {
       const normalizedIcon = String(icon).slice(0, -3) + '000';
       return `https://xivapi.com/i/0${normalizedIcon}/0${icon}.png`;
     },
-    ...mapActions(['saveItemData']),
+    ...mapState(['saveItemData']),
     handleItemClick(item) {
-      this.saveItemData(item);
+      this.extractMaterials(item);
+      this.$store.dispatch('saveItemData', item);
       this.$emit('item-clicked');
     },
+    ...mapState(['saveMaterials']),
+    extractMaterials(item) {
+      const extractedMaterials = []; // 素材を一時的に格納する配列
+
+      this.recipeData.forEach(recipe => {
+        if (recipe.ItemResult === item.ItemId) {
+          for (let i = 0; i < 10; i++) {
+            const ingredientKey = `ItemIngredient[${i}]`;
+            const amountKey = `AmountIngredient[${i}]`;
+
+            if (recipe[ingredientKey] !== "0" && recipe[amountKey] !== "0") {
+              const materialId = recipe[ingredientKey];
+              const amount = recipe[amountKey];
+
+              // Item.jsonから素材の名前を取得
+              const material = this.items.find(item => item.ItemId === materialId);
+              const materialName = material ? material.Name : "Unknown";
+
+              // 素材の素材を再帰的に取得する
+              const subMaterials = this.extractSubMaterials(materialId);
+
+              extractedMaterials.push({
+                materialName: materialName,
+                materialAmount: amount,
+                materials: subMaterials // 素材のリストは再帰的に取得した素材のリスト
+              });
+            }
+          }
+        }
+      });
+
+      // 抽出された素材をthis.materialsに代入
+      this.materials = extractedMaterials;
+      this.$store.dispatch('saveMaterials', this.materials);
+      console.log(this.materials);
+    },
+    extractSubMaterials(itemId) {
+      const subMaterials = [];
+
+      // Item.jsonから素材の素材を再帰的に取得する
+      this.recipeData.forEach(recipe => {
+        if (recipe.ItemResult === itemId) {
+          for (let i = 0; i < 10; i++) {
+            const ingredientKey = `ItemIngredient[${i}]`;
+            const amountKey = `AmountIngredient[${i}]`;
+
+            if (recipe[ingredientKey] !== "0" && recipe[amountKey] !== "0") {
+              const subMaterialId = recipe[ingredientKey];
+              const subMaterialAmount = recipe[amountKey];
+
+              const subMaterial = this.items.find(item => item.ItemId === subMaterialId);
+              const subMaterialName = subMaterial ? subMaterial.Name : "Unknown";
+
+              const subSubMaterials = this.extractSubMaterials(subMaterialId);
+
+              subMaterials.push({
+                materialName: subMaterialName,
+                materialAmount: subMaterialAmount,
+                materials: subSubMaterials
+              });
+            }
+          }
+        }
+      });
+
+      return subMaterials;
+    }
   }
 };
+
 </script>
 
 <style scoped>
@@ -74,7 +148,8 @@ ul {
 .item-list {
   padding: 0;
   height: 100%;
-  overflow-y: auto; /* スクロールバーを表示 */
+  overflow-y: auto;
+  /* スクロールバーを表示 */
 }
 
 .list-item {
