@@ -7,7 +7,7 @@
           <h5>検索結果</h5>
         </div>
         <div class="scrollable-area">
-          <Itemlist class="item-list" :tagNumber="tagNumber" @item-clicked="ItemListClick"></Itemlist>
+          <router-view></router-view> <!-- Vue Routerでマッチしたコンポーネントが表示される -->
         </div>
       </div>
       <div class="right-content" :class="{ 'hide': isMobile && rightContentVisible }">

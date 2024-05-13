@@ -1,10 +1,11 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import App from './App.vue'
 import Itemlist from './components/Itemlist.vue'
 
 const routes = [
   { path: '/', component: App },
-  { path: '/tag/:tagNumber', component: App, props: true},
-  { path: '/name/:ItemName', component: App, props: true},
+  { path: '/tag/:tagNumber', component: Itemlist, props: true },
+  { path: '/name/:ItemName', component: Itemlist, props: true },
 ]
 
 const router = createRouter({
