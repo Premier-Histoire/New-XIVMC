@@ -8,6 +8,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap';
 
 const routes = [
+  { path: '/', component: App },
   { path: '/tag/:tagNumber', component: Itemlist, props: true},
   { path: '/name/:ItemName', component: Itemlist, props: true},
 ]
