@@ -1,0 +1,13 @@
+{
+    "routes": [
+      {
+        "handle": "filesystem"
+      },
+      {
+        "src": "/(.*)",
+        "status": 200,
+        "dest": "/"
+      }
+    ]
+  }
+  
