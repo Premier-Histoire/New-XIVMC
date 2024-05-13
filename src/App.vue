@@ -7,7 +7,7 @@
           <h5>検索結果</h5>
         </div>
         <div class="scrollable-area">
-          <router-view @item-clicked="ItemListClick"></router-view> <!-- Vue Routerでマッチしたコンポーネントが表示される -->
+          <Itemlist @item-clicked="ItemListClick" /> <!-- Vue Routerでマッチしたコンポーネントが表示される -->
         </div>
       </div>
       <div class="right-content" :class="{ 'hide': isMobile && rightContentVisible }">
@@ -20,17 +20,17 @@
 
 <script>
 import Header from './components/Header.vue';
-import Itemlist from './components/Itemlist.vue';
 import Detail from './components/Detail.vue';
+import Itemlist from './components/Itemlist.vue';
 import MobileDetail from './components/MobileDetail.vue';
 import { mapState, mapActions } from 'vuex';
 
 export default {
   components: {
     Header,
-    Itemlist,
     Detail,
     MobileDetail,
+    Itemlist
   },
   computed: {
     ...mapState(['rightContentVisible']),

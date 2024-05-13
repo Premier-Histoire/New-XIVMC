@@ -99,6 +99,11 @@ export default {
         }
       });
 
+      // 素材を番号順にソート
+      extractedMaterials.sort((a, b) => {
+        return parseInt(a.materialAmount) - parseInt(b.materialAmount);
+      });
+
       // 抽出された素材をthis.materialsに代入
       this.materials = extractedMaterials;
       this.$store.dispatch('saveMaterials', this.materials);
@@ -118,9 +123,11 @@ export default {
               const subMaterialId = recipe[ingredientKey];
               const subMaterialAmount = recipe[amountKey];
 
+              // Item.jsonから素材の名前を取得
               const subMaterial = this.items.find(item => item.ItemId === subMaterialId);
               const subMaterialName = subMaterial ? subMaterial.Name : "Unknown";
 
+              // 素材の素材を再帰的に取得する
               const subSubMaterials = this.extractSubMaterials(subMaterialId);
 
               subMaterials.push({
@@ -131,6 +138,11 @@ export default {
             }
           }
         }
+      });
+
+      // 素材を番号順にソート
+      subMaterials.sort((a, b) => {
+        return parseInt(a.materialAmount) - parseInt(b.materialAmount);
       });
 
       return subMaterials;
