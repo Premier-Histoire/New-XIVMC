@@ -8,6 +8,7 @@ export default createStore({
   state: {
     sidebarOpen: false,
     Itemdata: savedItemData ? JSON.parse(savedItemData) : [], // クッキーからデータを読み込む
+    rightContentVisible: true,
   },
   mutations: {
     toggleSidebar(state) {
@@ -21,12 +22,18 @@ export default createStore({
 
       // クッキーにデータを保存
       Cookies.set('Itemdata', JSON.stringify(item), { expires: 7 }); // クッキーの有効期限を7日に設定
-    }
+    },
+    toggleRightContentVisibility(state) {
+      state.rightContentVisible = !state.rightContentVisible;
+    },
   },
   actions: {
     saveItemData({ commit }, item) {
       commit('saveItemData', item);
-    }
+    },
+    toggleRightContentVisibility({ commit }) {
+      commit('toggleRightContentVisibility');
+    },
   },
   getters: {
     // 必要に応じてゲッターを定義
