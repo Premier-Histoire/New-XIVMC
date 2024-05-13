@@ -6,7 +6,7 @@ const routes = [
   { path: '/tag/:tagNumber', component: Itemlist, props: true },
   { path: '/name/:ItemName', component: Itemlist, props: true },
   // リダイレクトを追加
-  { path: '/old-route/:oldParam', redirect: to => {
+  { path: '/tag/:oldParam', redirect: to => {
       return { path: `/tag/${to.params.oldParam}` }
     }
   },
