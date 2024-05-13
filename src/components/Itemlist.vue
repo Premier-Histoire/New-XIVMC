@@ -16,6 +16,7 @@ import { mapActions } from 'vuex';
 import Itemlist from "../assets/json/Item.json";
 
 export default {
+  props: ['tagNumber', 'ItemName'],
   data() {
     return {
       items: Itemlist,
