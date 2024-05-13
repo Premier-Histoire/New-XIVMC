@@ -59,6 +59,7 @@ export default {
     ...mapActions(['saveItemData']),
     handleItemClick(item) {
       this.saveItemData(item);
+      this.$emit('item-clicked');
     },
   }
 };

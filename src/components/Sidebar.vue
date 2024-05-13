@@ -76,6 +76,7 @@ export default {
         // ルーターで検索結果ページに遷移
         router.push({ path: `/name/${encodeURIComponent(searchQuery.value)}` });
         // サイドバーを閉じる
+        store.state.rightContentVisible = true;
         close();
       }
     };

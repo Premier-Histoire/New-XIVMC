@@ -252,6 +252,7 @@ export default {
         },
         close() {
             store.commit('closeSidebar');
+            store.state.rightContentVisible = true;
         }
     }
 }
