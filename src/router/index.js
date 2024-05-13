@@ -2,36 +2,26 @@ import { createRouter, createWebHistory } from 'vue-router'
 import App from './App.vue'
 import Itemlist from './components/Itemlist.vue'
 
-// デフォルトのパスを定義
-const defaultTagNumber = '1'; // デフォルトのタグ番号
+// デフォルトのタグ番号
+const defaultTagNumber = '1';
 
 const routes = [
   { path: '/', component: App },
   { path: '/tag/:tagNumber', component: Itemlist, props: true },
   { path: '/name/:ItemName', component: Itemlist, props: true },
-  // ルートパスの定義
-  { 
-    path: '/tag/:tagNumber', // /tag/ で始まるパスにマッチ
-    redirect: (to) => {
-      // パスが /tag/ で始まる場合、リダイレクトしない
-      return to.path;
-    }
-  },
+  // その他のパスへのリダイレクトを処理
   {
-    path: '/name/:ItemName', // /name/ で始まるパスにマッチ
-    redirect: (to) => {
-      // パスが /name/ で始まる場合、リダイレクトしない
-      return to.path;
-    }
-  },
-  { 
     path: '/:catchAll(.*)', // すべてのパスにマッチ
     redirect: (to) => {
-      // パスが /tag/ または /name/ で始まる場合のみリダイレクト
-      if (to.path.startsWith('/tag/') || to.path.startsWith('/name/')) {
-        return to.path;
+      // リダイレクト先のパスを動的に生成
+      if (to.params.tagNumber && to.path.startsWith('/tag/')) {
+        // /tag/パスにアクセスされ、かつtagNumberが指定されている場合
+        return to.fullPath;
+      } else if (to.params.ItemName && to.path.startsWith('/name/')) {
+        // /name/パスにアクセスされ、かつItemNameが指定されている場合
+        return to.fullPath;
       } else {
-        // それ以外の場合、デフォルトのパスにリダイレクト
+        // それ以外の場合はデフォルトのパスにリダイレクト
         return `/tag/${defaultTagNumber}`;
       }
     }
