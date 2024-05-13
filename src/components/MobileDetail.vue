@@ -1,5 +1,5 @@
 <template>
-    <div class="Detail">
+    <div class="Detail" ref="detail" @scroll="checkScroll">
         <div class="Detail-header" @click="goBack">
             <button class="btn btn-actions">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="black"
@@ -26,8 +26,17 @@
                 </div>
             </div>
             <div class="item-data">
-
+                <!-- ここにアイテムデータを表示するコンテンツを追加 -->
             </div>
+        </div>
+        <!-- トップに戻るボタン -->
+        <div class="scroll-top-btn btn btn-primary rounded-circle p-0" style="width:2rem;height:2rem;" v-show="!isTop"
+            @click="scrollToTop">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-caret-up"
+                viewBox="0 0 16 16">
+                <path
+                    d="M3.204 11h9.592L8 5.519 3.204 11zm-.753-.659 4.796-5.48a1 1 0 0 1 1.506 0l4.796 5.48c.566.647.106 1.659-.753 1.659H3.204a1 1 0 0 1-.753-1.659z" />
+            </svg>
         </div>
     </div>
 </template>
@@ -40,6 +49,11 @@ export default {
     computed: {
         ...mapState(['Itemdata']) // ストアのItemdataをコンポーネントのItemdataとしてマッピング
     },
+    data() {
+        return {
+            isTop: true // スクロール位置がトップにあるかどうかのフラグ
+        };
+    },
     methods: {
         goBack() {
             store.state.rightContentVisible = true;
@@ -48,11 +62,42 @@ export default {
             const normalizedIcon = String(icon).slice(0, -3) + '000'; // 万と千の桁以下を捨てて020000の形式に変換
             return `https://xivapi.com/i/0${normalizedIcon}/0${icon}.png`; // XIVAPIから画像を取得
         },
-    }
-}
+        // スクロール位置がトップかどうかをチェックするメソッド
+        checkScroll() {
+            const detail = this.$refs.detail;
+            if (detail.scrollTop > 0) {
+                this.isTop = false;
+            } else {
+                this.isTop = true;
+            }
+        },
+        // トップにスクロールするメソッド
+        scrollToTop() {
+            const detail = this.$refs.detail;
+            const scrollStep = -detail.scrollTop / 15; // スクロールステップの計算
+            const scrollInterval = setInterval(() => {
+                if (detail.scrollTop !== 0) {
+                    detail.scrollBy(0, scrollStep); // スクロールを実行
+                } else {
+                    clearInterval(scrollInterval); // スクロールがトップに達したらインターバルをクリア
+                    this.isTop = true; // スクロール位置がトップになったことを示す
+                }
+            }, 15); // 15ミリ秒ごとにスクロール
+        },
+    },
+};
 </script>
 
 <style scoped>
+.Detail {
+    overflow-y: scroll;
+    /* 垂直方向のスクロールを有効にする */
+    height: 100%;
+    /* 高さを100%に設定し、親要素に合わせてスクロール可能なエリアを作成 */
+    position: relative;
+    /* 相対位置を設定して、絶対配置のボタンを配置する */
+}
+
 .Detail-header {
     width: 100%;
     height: 64px;
@@ -88,7 +133,7 @@ export default {
     display: block;
     text-align: center;
     width: 100%;
-    margin-bottom: 20px;
+    margin-bottom: 10px;
 }
 
 .item-icon {
@@ -123,5 +168,17 @@ export default {
     opacity: 0.3;
     width: 100%;
     flex-grow: 1;
+}
+
+/* トップに戻るボタンのスタイル */
+.scroll-top-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    cursor: pointer;
+    z-index: 1000;
+    /* 他の要素よりも上に表示 */
+    transition: opacity 0.3s;
+    /* 不透明度の変化をアニメーション化 */
 }
 </style>

@@ -24,7 +24,6 @@ export default createStore({
       Cookies.set('Itemdata', JSON.stringify(item), { expires: 7 }); // クッキーの有効期限を7日に設定
     },
     toggleRightContentVisibility(state) {
-      console.log("check")
       state.rightContentVisible = !state.rightContentVisible;
     },
   },
