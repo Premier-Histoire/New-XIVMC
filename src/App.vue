@@ -76,6 +76,7 @@ export default {
   float: left;
   height: calc(100vh - 64px);
   padding: 10px;
+  overflow-y: hidden;
 }
 
 .item-search {
