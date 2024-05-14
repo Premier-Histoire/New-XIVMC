@@ -107,6 +107,10 @@ export default {
   border-left: none;
 }
 
+.mobile-layout .right-content {
+  height: 100% !important;
+}
+
 .item-list {
   width: 100%;
 }

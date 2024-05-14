@@ -105,11 +105,8 @@ export default {
 <style scoped>
 .Detail {
     overflow-y: scroll;
-    /* 垂直方向のスクロールを有効にする */
-    height: 100%;
-    /* 高さを100%に設定し、親要素に合わせてスクロール可能なエリアを作成 */
+    height: calc(100vh - 64px);
     position: relative;
-    /* 相対位置を設定して、絶対配置のボタンを配置する */
 }
 
 .Detail-header {
@@ -177,7 +174,6 @@ export default {
 }
 
 .item-data {
-    height: 1000px;
     width: 100%;
     flex-grow: 1;
 }

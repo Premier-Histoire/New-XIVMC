@@ -6,6 +6,7 @@
         <div class="item-wrapper">
           <img :src="getImageUrl(item.Icon)" alt="Item Icon">
           <span>{{ item.Name }}</span>
+          <img v-if="isCraftable(item.ItemId)" src="../assets/img/craft.png" alt="Craftable" class="craft">
         </div>
       </li>
     </ul>
@@ -71,7 +72,48 @@ export default {
     ...mapState(['saveMaterials']),
     extractMaterials(item) {
       const extractedMaterials = []; // 素材を一時的に格納する配列
+      const processedItems = new Set(); // 処理済みのアイテムを追跡するためのセット
 
+      const extractSubMaterials = (itemId) => {
+        const subMaterials = [];
+
+        // Item.jsonから素材の素材を再帰的に取得する
+        this.recipeData.forEach(recipe => {
+          if (recipe.ItemResult === itemId && !processedItems.has(itemId)) { // 処理されていないアイテムのみ処理する
+            for (let i = 0; i < 10; i++) {
+              const ingredientKey = `ItemIngredient[${i}]`;
+              const amountKey = `AmountIngredient[${i}]`;
+
+              if (recipe[ingredientKey] !== "0" && recipe[amountKey] !== "0") {
+                const subMaterialId = recipe[ingredientKey];
+                const subMaterialAmount = recipe[amountKey];
+
+                // Item.jsonから素材の名前を取得
+                const subMaterial = this.items.find(item => item.ItemId === subMaterialId);
+                const subMaterialIconId = subMaterial ? subMaterial.Icon : "Unknown";
+                const subMaterialName = subMaterial ? subMaterial.Name : "Unknown";
+
+                // 素材の素材を再帰的に取得する
+                const subSubMaterials = extractSubMaterials(subMaterialId);
+
+                subMaterials.push({
+                  materialId: subMaterialId,
+                  materialIcon: subMaterialIconId,
+                  materialName: subMaterialName,
+                  materialAmount: subMaterialAmount,
+                  materials: subSubMaterials
+                });
+              }
+            }
+            // 処理済みのアイテムを追加
+            processedItems.add(itemId);
+          }
+        });
+
+        return subMaterials;
+      };
+
+      // Recipe.jsonから素材を抽出する
       this.recipeData.forEach(recipe => {
         if (recipe.ItemResult === item.ItemId) {
           for (let i = 0; i < 10; i++) {
@@ -84,12 +126,15 @@ export default {
 
               // Item.jsonから素材の名前を取得
               const material = this.items.find(item => item.ItemId === materialId);
+              const materialIcon = material ? material.Icon : "Unknown";
               const materialName = material ? material.Name : "Unknown";
 
               // 素材の素材を再帰的に取得する
-              const subMaterials = this.extractSubMaterials(materialId);
+              const subMaterials = extractSubMaterials(materialId);
 
               extractedMaterials.push({
+                materialId: materialId,
+                materialIcon: materialIcon,
                 materialName: materialName,
                 materialAmount: amount,
                 materials: subMaterials // 素材のリストは再帰的に取得した素材のリスト
@@ -99,53 +144,12 @@ export default {
         }
       });
 
-      // 素材を番号順にソート
-      extractedMaterials.sort((a, b) => {
-        return parseInt(a.materialAmount) - parseInt(b.materialAmount);
-      });
-
       // 抽出された素材をthis.materialsに代入
       this.materials = extractedMaterials;
       this.$store.dispatch('saveMaterials', this.materials);
-      console.log(this.materials);
     },
-    extractSubMaterials(itemId) {
-      const subMaterials = [];
-
-      // Item.jsonから素材の素材を再帰的に取得する
-      this.recipeData.forEach(recipe => {
-        if (recipe.ItemResult === itemId) {
-          for (let i = 0; i < 10; i++) {
-            const ingredientKey = `ItemIngredient[${i}]`;
-            const amountKey = `AmountIngredient[${i}]`;
-
-            if (recipe[ingredientKey] !== "0" && recipe[amountKey] !== "0") {
-              const subMaterialId = recipe[ingredientKey];
-              const subMaterialAmount = recipe[amountKey];
-
-              // Item.jsonから素材の名前を取得
-              const subMaterial = this.items.find(item => item.ItemId === subMaterialId);
-              const subMaterialName = subMaterial ? subMaterial.Name : "Unknown";
-
-              // 素材の素材を再帰的に取得する
-              const subSubMaterials = this.extractSubMaterials(subMaterialId);
-
-              subMaterials.push({
-                materialName: subMaterialName,
-                materialAmount: subMaterialAmount,
-                materials: subSubMaterials
-              });
-            }
-          }
-        }
-      });
-
-      // 素材を番号順にソート
-      subMaterials.sort((a, b) => {
-        return parseInt(a.materialAmount) - parseInt(b.materialAmount);
-      });
-
-      return subMaterials;
+    isCraftable(itemId) {
+      return RecipeData.some(recipe => recipe.ItemResult.includes(itemId));
     }
   }
 };
@@ -153,35 +157,42 @@ export default {
 </script>
 
 <style scoped>
-ul {
-  margin-bottom: 0;
-}
-
 .item-list {
+  list-style-type: none;
   padding: 0;
-  height: 100%;
-  overflow-y: auto;
-  /* スクロールバーを表示 */
+  margin: 0;
 }
 
 .list-item {
-  list-style-type: none !important;
+  display: flex;
+  align-items: center;
+  padding: 5px;
 }
 
 .item-wrapper {
   display: flex;
   align-items: center;
-  height: 40px;
-  margin-bottom: 10px;
+  width: 100%;
 }
 
-.last-item .item-wrapper {
-  margin-bottom: 0;
-}
-
-.item-wrapper img {
+.item-wrapper img:first-child {
   margin-right: 10px;
-  width: 40px;
-  height: 40px;
+}
+
+.item-wrapper span {
+  flex-grow: 1;
+}
+
+.craft {
+  margin-left: auto;
+  /* この行でcraftを右端に移動 */
+  width: 20px;
+  /* craft画像の幅を20pxに設定 */
+  height: 20px;
+  /* craft画像の高さを20pxに設定 */
+}
+
+.last-item {
+  border-bottom: none;
 }
 </style>
