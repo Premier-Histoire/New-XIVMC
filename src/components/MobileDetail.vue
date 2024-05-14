@@ -136,14 +136,11 @@ export default {
     --bs-btn-active-border-color: #d0d7de;
 }
 
-.main {
-    padding: 10px;
-}
-
 .item-header {
     display: block;
     text-align: center;
     width: 100%;
+    margin-top: 10px;
     margin-bottom: 10px;
 }
 

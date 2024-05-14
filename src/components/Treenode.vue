@@ -3,29 +3,34 @@
     <ul class="treeview">
       <li v-for="(material, index) in materials" :key="index">
         <div @click="toggleNode(material)" class="treeview-item">
-          <span
-            :class="{ 'treeview-folder': material.materials && material.materials.length > 0, 'treeview-file': !material.materials || material.materials.length === 0 }">
+          <span class="treeview-folder">
             <i
               :class="{ 'icon-plus': !material.expanded && material.materials && material.materials.length > 0, 'icon-minus': material.expanded && material.materials.length > 0, 'icon-blank': !material.materials || material.materials.length === 0 }"></i>
-            <slot :material="material">
-              <img :src="getImageUrl(material.materialIcon)" alt="Material Icon" class="material-icon">
-              {{ material.materialName }} ({{ material.materialAmount }})
-              <span v-if="material.price"> - {{ material.price }} gil</span>
-            </slot>
+            <img :src="getImageUrl(material.materialIcon)" alt="Material Icon" class="material-icon">
+            <span class="material-info">
+              <span class="material-name">{{ material.materialName }}</span>
+              <span class="material-amount">{{ material.materialAmount }}個</span>
+              <span v-if="material.price" class="material-price">{{ formatNumber(material.price *
+                material.materialAmount) }} <i class="xiv gil"></i></span>
+              <span v-else class="loading-container"><span class="loading-spinner"></span></span> <!-- ローディング画像 -->
+            </span>
           </span>
         </div>
-        <ul v-show="material.expanded && material.materials && material.materials.length > 0" class="treeview">
-          <tree-node :materials="material.materials" v-if="!loading">
-            <template v-slot="{ material }">
-              <span class="icon-blank">
-                <img :src="getImageUrl(material.materialIcon)" alt="Material Icon" class="material-icon">
-                {{ material.materialName }} ({{ material.materialAmount }})
-                <span v-if="material.price"> - {{ material.price }} <i class="xiv e03c"></i></span>
-              </span>
-            </template>
-          </tree-node>
-          <div v-else>Loading...</div>
+        <ul v-show="material.expanded && material.materials && material.materials.length > 0" class="treeview-row">
+          <tree-node :materials="material.materials" :key="material.id"></tree-node>
         </ul>
+      </li>
+      <li v-if="!loading" class="treeview-price">
+        <div class="treeview-item">
+          <span class="treeview-folder">
+            <span style="width:48px;"></span>
+            <span class="material-info">
+              <span class="material-name"></span>
+              <span class="material-amount">価格</span>
+              <span v-if="!loading" class="material-price">{{ formatNumber(totalPrice) }} <i class="xiv gil"></i></span>
+            </span>
+          </span>
+        </div>
       </li>
     </ul>
   </div>
@@ -39,17 +44,21 @@ export default {
   props: {
     materials: {
       type: Array,
-      required: true
+      required: true,
     }
   },
   data() {
     return {
-      loading: true // APIリクエストのローディング状態を追加
+      loading: true, // APIリクエストのローディング状態を追加
+      totalPrice: 0
     };
   },
   methods: {
-    toggleNode(material) {
+    async toggleNode(material) {
       material.expanded = !material.expanded;
+      if (material.expanded && !material.loaded) {
+        await this.fetchSubMaterialsPrices(material);
+      }
     },
     getImageUrl(icon) {
       const normalizedIcon = String(icon).slice(0, -3) + '000';
@@ -63,6 +72,16 @@ export default {
       });
       await this.limitRequests(requests, 25); // APIリクエストのレート制限を尊重
       this.loading = false; // ローディング状態を終了
+      this.calculateTotalPrice();
+    },
+    async fetchSubMaterialsPrices(material) {
+      const requests = material.materials.map(subMaterial => {
+        if (subMaterial.materialIcon && !subMaterial.price) {
+          return this.fetchMarketPrice(subMaterial);
+        }
+      });
+      await this.limitRequests(requests, 25); // APIリクエストのレート制限を尊重
+      material.loaded = true; // サブ素材の価格取得が完了したらloadedフラグを設定
     },
     async limitRequests(requests, limit) {
       const chunks = this.chunkArray(requests, limit);
@@ -83,6 +102,15 @@ export default {
           material.price = '取得失敗';
         });
     },
+    calculateTotalPrice() {
+      let totalPrice = 0;
+      this.materials.forEach(material => {
+        if (material.price) {
+          totalPrice += material.price * material.materialAmount;
+        }
+      });
+      this.totalPrice = totalPrice;
+    },
     chunkArray(arr, size) {
       const chunks = [];
       for (let i = 0; i < arr.length; i += size) {
@@ -92,6 +120,9 @@ export default {
     },
     sleep(ms) {
       return new Promise(resolve => setTimeout(resolve, ms));
+    },
+    formatNumber(number) {
+      return number.toLocaleString(); // 数値をフォーマットする
     }
   },
   watch: {
@@ -113,19 +144,36 @@ export default {
 .treeview {
   list-style: none;
   padding-left: 0;
+  color: black;
+}
+
+.treeview-row {
+  list-style: none;
+  padding-left: 0;
+}
+
+.treeview-row .treeview {
+  margin-left: 1rem;
+  color: grey;
 }
 
 .treeview-item {
   cursor: pointer;
   padding-left: 1rem;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  min-height: 20px;
 }
 
 .treeview-folder {
-  color: #007bff;
+  display: flex;
+  flex-wrap: nowrap;
 }
 
 .treeview-file {
   color: #6c757d;
+  display: flex;
 }
 
 .icon-plus,
@@ -133,28 +181,35 @@ export default {
 .icon-blank {
   width: 20px;
   height: 20px;
+  display: inline-block;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.icon-plus::before,
+.icon-minus::before {
+  display: inline-block;
+  width: 100%;
+  text-align: center;
 }
 
 .icon-plus::before {
   content: "+";
-  margin-right: 0.5rem;
 }
 
 .icon-minus::before {
   content: "-";
-  margin-right: 0.5rem;
 }
 
 .icon-blank::before {
   content: "";
-  width: 0.5rem;
-  margin-right: 0.5rem;
   display: inline-block;
+  width: 100%;
 }
 
 .material-icon {
   width: 20px;
-  height: auto;
+  height: 20px;
   margin-right: 0.5rem;
 }
 
@@ -164,6 +219,60 @@ export default {
   top: 0;
   left: -1rem;
   border-left: 1px solid #ced4da;
-  height: 100%;
 }
+
+.material-info {
+  display: flex;
+  align-items: center;
+}
+
+.material-name {
+  flex: 1;
+  min-width: 150px;
+}
+
+.material-amount {
+  min-width: 50px;
+  text-align: right;
+}
+
+.material-price {
+  min-width: 100px;
+  text-align: right;
+}
+
+.loading-container {
+  width: 100px;
+  height: 20px;
+}
+
+.loading-spinner {
+  display: flex;
+  align-items: center;
+}
+
+.loading-spinner i {
+  animation: spin 1s linear infinite;
+  /* スピンアニメーション */
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #ccc;
+  border-radius: 50%;
+  border-top: 2px solid #3498db;
+  animation: spin 1s linear infinite;
+}
+
 </style>
