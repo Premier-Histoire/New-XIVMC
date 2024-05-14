@@ -56,7 +56,6 @@ export default {
       });
     },
     scrollToTop() {
-      // アイテムリストのトップまでスクロールする
       this.$refs.itemList.scrollTop = 0;
     },
     getImageUrl(icon) {

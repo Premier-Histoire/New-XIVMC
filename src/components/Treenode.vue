@@ -6,24 +6,25 @@
           <span
             :class="{ 'treeview-folder': material.materials && material.materials.length > 0, 'treeview-file': !material.materials || material.materials.length === 0 }">
             <i
-              :class="{ 'icon-plus': !material.expanded && material.materials && material.materials.length > 0, 'icon-minus': material.expanded && material.materials && material.materials.length > 0, 'icon-blank': !material.materials || material.materials.length === 0 }"></i>
+              :class="{ 'icon-plus': !material.expanded && material.materials && material.materials.length > 0, 'icon-minus': material.expanded && material.materials.length > 0, 'icon-blank': !material.materials || material.materials.length === 0 }"></i>
             <slot :material="material">
               <img :src="getImageUrl(material.materialIcon)" alt="Material Icon" class="material-icon">
               {{ material.materialName }} ({{ material.materialAmount }})
+              <span v-if="material.price"> - {{ material.price }} gil</span>
             </slot>
           </span>
         </div>
         <ul v-show="material.expanded && material.materials && material.materials.length > 0" class="treeview">
-          <tree-node :materials="material.materials">
-            <!-- 再帰的にツリーノードを呼び出す -->
+          <tree-node :materials="material.materials" v-if="!loading">
             <template v-slot="{ material }">
-              <!-- ここで任意のツリーノードの内容を定義 -->
               <span class="icon-blank">
                 <img :src="getImageUrl(material.materialIcon)" alt="Material Icon" class="material-icon">
                 {{ material.materialName }} ({{ material.materialAmount }})
+                <span v-if="material.price"> - {{ material.price }} <i class="xiv e03c"></i></span>
               </span>
             </template>
           </tree-node>
+          <div v-else>Loading...</div>
         </ul>
       </li>
     </ul>
@@ -31,6 +32,8 @@
 </template>
 
 <script>
+import axios from 'axios';
+
 export default {
   name: 'TreeNode',
   props: {
@@ -39,6 +42,11 @@ export default {
       required: true
     }
   },
+  data() {
+    return {
+      loading: true // APIリクエストのローディング状態を追加
+    };
+  },
   methods: {
     toggleNode(material) {
       material.expanded = !material.expanded;
@@ -46,13 +54,57 @@ export default {
     getImageUrl(icon) {
       const normalizedIcon = String(icon).slice(0, -3) + '000';
       return `https://xivapi.com/i/0${normalizedIcon}/0${icon}.png`;
+    },
+    async fetchMarketPrices() {
+      const requests = this.materials.map(material => {
+        if (material.materialIcon && !material.price) {
+          return this.fetchMarketPrice(material);
+        }
+      });
+      await this.limitRequests(requests, 25); // APIリクエストのレート制限を尊重
+      this.loading = false; // ローディング状態を終了
+    },
+    async limitRequests(requests, limit) {
+      const chunks = this.chunkArray(requests, limit);
+      for (const chunk of chunks) {
+        await Promise.all(chunk);
+        await this.sleep(1000); // 1秒ごとにリクエストを送信することでレート制限を尊重
+      }
+    },
+    fetchMarketPrice(material) {
+      const server = 'JAPAN';
+      const url = `https://universalis.app/api/v2/${server}/${material.materialId}?fields=minPrice`;
+      return axios.get(url)
+        .then(response => {
+          material.price = response.data.minPrice || '価格情報なし';
+        })
+        .catch(error => {
+          console.error('価格情報の取得に失敗しました:', error);
+          material.price = '取得失敗';
+        });
+    },
+    chunkArray(arr, size) {
+      const chunks = [];
+      for (let i = 0; i < arr.length; i += size) {
+        chunks.push(arr.slice(i, i + size));
+      }
+      return chunks;
+    },
+    sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+  },
+  watch: {
+    materials: {
+      handler() {
+        this.loading = true; // データの変更が検出されたらローディング状態を再度セット
+        this.fetchMarketPrices(); // マーケット価格を再度取得
+      },
+      deep: true // materials内のプロパティの変更も監視する
     }
   },
   created() {
-    // データから展開されたノードを設定
-    this.materials.forEach(material => {
-      material.expanded = false; // 初期状態ではすべてのノードを閉じた状態にする
-    });
+    this.fetchMarketPrices();
   }
 }
 </script>
@@ -76,6 +128,13 @@ export default {
   color: #6c757d;
 }
 
+.icon-plus,
+.icon-minus,
+.icon-blank {
+  width: 20px;
+  height: 20px;
+}
+
 .icon-plus::before {
   content: "+";
   margin-right: 0.5rem;
@@ -94,9 +153,9 @@ export default {
 }
 
 .material-icon {
-  width: 20px; /* 画像の幅を適切なサイズに調整 */
-  height: auto; /* 高さは自動で調整 */
-  margin-right: 0.5rem; /* 画像とテキストの間隔を設定 */
+  width: 20px;
+  height: auto;
+  margin-right: 0.5rem;
 }
 
 .treeview-item:before {

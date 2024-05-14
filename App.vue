@@ -1,116 +1,114 @@
 <template>
-  <div id="app">
-    <Header />
-    <div class="main-content" :class="{ 'mobile-layout': isMobile }">
-      <div class="left-content" :class="{ 'hide': isMobile && !rightContentVisible }">
-        <div class="item-search">
-          <h5>検索結果</h5>
+  <div>
+    <ul class="treeview">
+      <li v-for="(material, index) in materials" :key="index">
+        <div @click="toggleNode(material)" class="treeview-item">
+          <span
+            :class="{ 'treeview-folder': material.materials && material.materials.length > 0, 'treeview-file': !material.materials || material.materials.length === 0 }">
+            <i
+              :class="{ 'icon-plus': !material.expanded && material.materials && material.materials.length > 0, 'icon-minus': material.expanded && material.materials && material.materials.length > 0, 'icon-blank': !material.materials || material.materials.length === 0 }"></i>
+            <slot :material="material">
+              <img :src="getImageUrl(material.materialId)" alt="Material Icon" class="material-icon">
+              {{ material.materialName }} ({{ material.materialAmount }})
+            </slot>
+          </span>
         </div>
-        <div class="scrollable-area">
-          <Itemlist class="item-list" @item-clicked="ItemListClick"></Itemlist>
-        </div>
-      </div>
-      <div class="right-content" :class="{ 'hide': isMobile && rightContentVisible }">
-        <Detail v-show="!isMobile" />
-        <MobileDetail v-show="isMobile" />
-      </div>
-    </div>
+        <ul v-show="material.expanded && material.materials && material.materials.length > 0" class="treeview">
+          <tree-node :materials="material.materials">
+            <!-- 再帰的にツリーノードを呼び出す -->
+            <template v-slot="{ material }">
+              <!-- ここで任意のツリーノードの内容を定義 -->
+              <span class="icon-blank">
+                <img :src="getImageUrl(material.materialId)" alt="Material Icon" class="material-icon">
+                {{ material.materialName }} ({{ material.materialAmount }})
+              </span>
+            </template>
+          </tree-node>
+        </ul>
+      </li>
+    </ul>
   </div>
 </template>
 
 <script>
-import Header from './components/Header.vue';
-import Itemlist from './components/Itemlist.vue';
-import Detail from './components/Detail.vue';
-import MobileDetail from './components/MobileDetail.vue';
-import { mapState, mapActions } from 'vuex';
-
 export default {
-  components: {
-    Header,
-    Itemlist,
-    Detail,
-    MobileDetail,
-  },
-  computed: {
-    ...mapState(['rightContentVisible']),
-  },
-  data() {
-    return {
-      isMobile: false,
-    };
-  },
-  mounted() {
-    window.addEventListener('resize', this.checkIsMobile);
-    this.checkIsMobile();
-  },
-  destroyed() {
-    window.removeEventListener('resize', this.checkIsMobile);
+  name: 'TreeNode',
+  props: {
+    materials: {
+      type: Array,
+      required: true
+    }
   },
   methods: {
-    ...mapActions(['toggleRightContentVisibility']),
-    checkIsMobile() {
-      this.isMobile = window.innerWidth <= 768;
+    toggleNode(material) {
+      material.expanded = !material.expanded;
     },
-    ItemListClick() {
-      if (this.isMobile) {
-        this.toggleRightContentVisibility();
-      }
-    },
+    getImageUrl(icon) {
+      const normalizedIcon = String(icon).slice(0, -3) + '000';
+      return `https://xivapi.com/i/0${normalizedIcon}/0${icon}.png`;
+    }
   },
-};
+  created() {
+    // データから展開されたノードを設定
+    this.materials.forEach(material => {
+      material.expanded = false; // 初期状態ではすべてのノードを閉じた状態にする
+    });
+  }
+}
 </script>
 
-<style>
-.main-content {
+<style scoped>
+.treeview {
+  list-style: none;
+  padding-left: 0;
+}
+
+.treeview-item {
+  cursor: pointer;
+  padding-left: 1rem;
+  position: relative; /* absolute positioning for treeview-item:before */
+}
+
+.treeview-folder {
+  color: #007bff;
+}
+
+.treeview-file {
+  color: #6c757d;
+}
+
+.icon-plus::before {
+  content: "+";
+  margin-right: 0.5rem;
+  font-style: normal; /* 正常なフォントスタイルを設定 */
+}
+
+.icon-minus::before {
+  content: "-";
+  margin-right: 0.5rem;
+  font-style: normal; /* 正常なフォントスタイルを設定 */
+}
+
+.icon-blank::before {
+  content: "";
+  width: 0.5rem;
+  margin-right: 0.5rem;
+  display: inline-block;
+  font-style: normal; /* 正常なフォントスタイルを設定 */
+}
+
+.material-icon {
+  width: 20px; /* 画像の幅を適切なサイズに調整 */
+  height: auto; /* 高さは自動で調整 */
+  margin-right: 0.5rem; /* 画像とテキストの間隔を設定 */
+}
+
+.treeview-item:before {
+  content: "";
   position: absolute;
-  top: 64px;
-  left: 0;
-  width: 100%;
-  bottom: 0;
-  overflow-x: hidden;
-}
-
-.left-content {
-  width: 25%;
-  float: left;
-  height: calc(100vh - 64px);
-  padding: 10px;
-}
-
-.item-search {
-  display: flex;
-  align-items: center;
-}
-
-.scrollable-area {
-  width: 100%;
-  height: calc(100% - 40px);
-  overflow-y: auto;
-}
-
-.right-content {
-  width: 75%;
-  height: calc(100vh - 64px);
-  float: left;
-  border-left: 1px solid #d0d7de;
-}
-
-.mobile-layout {
-  flex-direction: column;
-}
-
-.mobile-layout .right-content,
-.mobile-layout .left-content {
-  width: 100%;
-  border-left: none;
-}
-
-.item-list {
-  width: 100%;
-}
-
-.hide {
-  display: none;
+  top: 0;
+  left: -1rem;
+  border-left: 1px solid #ced4da;
+  height: 100%;
 }
 </style>
