@@ -62,7 +62,6 @@
           <i class="icon-blank"></i>
           <i class="material-icon"></i>
           <span class="treeview-folder border-top border-dark">
-            <span style="width:48px;"></span>
             <span class="material-info">
               <span class="material-name"></span>
               <span class="material-amount">価格</span>
