@@ -303,6 +303,7 @@ export default {
 </script>
 
 <style scoped>
+/* モバイル用スタイル */
 .treeview {
   list-style: none;
   padding-left: 0;
@@ -433,4 +434,52 @@ export default {
     transform: rotate(360deg);
   }
 }
+
+/* PC用スタイル */
+@media (min-width: 768px) {
+  .treeview {
+    padding-left: 1rem;
+  }
+
+  .treeview-row {
+    padding-left: 3rem;
+  }
+
+  .treeview-item {
+    padding-left: 0rem;
+    padding-right: 1.5rem;
+    padding-bottom: 10px;
+  }
+
+  .material-icon {
+    width: 40px;
+    height: 40px;
+    margin-right: 1rem;
+  }
+
+  .material-name {
+    min-width: 200px;
+  }
+
+  .material-amount {
+    min-width: 70px;
+    text-align: right;
+  }
+
+  .material-price {
+    min-width: 120px;
+    text-align: right;
+  }
+
+  .loading-container {
+    width: 120px;
+    height: 24px;
+  }
+
+  .loading-spinner {
+    width: 24px;
+    height: 24px;
+  }
+}
+
 </style>
