@@ -21,17 +21,31 @@
       </div>
     </div>
     <div class="item-data">
-
+      <Treenode :materials="materials" />
     </div>
   </div>
 </template>
 
 <script>
 import { mapState } from 'vuex';
+import Treenode from './Treenode.vue';
+import Salehistory from './Salehistory.vue';
+import Buyhistory from './Buyhistory.vue';
 
 export default {
+  components: {
+        Treenode,
+        Salehistory,
+        Buyhistory
+    },
   computed: {
-    ...mapState(['Itemdata']) // ストアのItemdataをコンポーネントのItemdataとしてマッピング
+    ...mapState(['Itemdata']), // ストアのItemdataをコンポーネントのItemdataとしてマッピング
+    ...mapState(['materials']),
+  },
+  data() {
+    return {
+      imageUrl: '' // 画像URLを保持するための変数
+    };
   },
   methods: {
     getImageUrl(icon) {
@@ -48,25 +62,6 @@ export default {
           console.error('テキストのコピーに失敗しました：', err);
         });
     }
-  },
-  watch: {
-    Itemdata: {
-      immediate: true, // 初期化時にも実行
-      handler(newValue, oldValue) {
-        // Itemdataが変更されたら画像URLを更新する
-        if (newValue !== oldValue) {
-          // 新しいアイテムのアイコンを取得
-          const icon = newValue && newValue.Icon;
-          // 画像URLを取得し、更新
-          this.imageUrl = this.getImageUrl(icon);
-        }
-      }
-    }
-  },
-  data() {
-    return {
-      imageUrl: '' // 画像URLを保持するための変数
-    };
   }
 };
 </script>
@@ -112,8 +107,6 @@ export default {
 }
 
 .item-data {
-  background-color: red;
-  opacity: 0.3;
   width: 100%;
   flex-grow: 1;
 }
