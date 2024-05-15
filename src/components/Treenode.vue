@@ -448,7 +448,7 @@ export default {
   }
 
   .treeview-row {
-    padding-left: 3rem;
+    padding-left: 5rem;
   }
 
   .treeview-folder {
