@@ -8,9 +8,11 @@
         <div class="item-name">
           <h1><span>{{ Itemdata.LevelItem }}</span> {{ Itemdata.Name }}</h1>
           <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-clipboard"
-               viewBox="0 0 16 16" @click="copyItemName">
-            <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/>
-            <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/>
+            viewBox="0 0 16 16" @click="copyItemName">
+            <path
+              d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z" />
+            <path
+              d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z" />
           </svg>
         </div>
         <div class="item-description">
@@ -40,10 +42,10 @@ import Buyhistory from './Buyhistory.vue';
 
 export default {
   components: {
-        Treenode,
-        Salehistory,
-        Buyhistory
-    },
+    Treenode,
+    Salehistory,
+    Buyhistory
+  },
   computed: {
     ...mapState(['Itemdata']), // ストアのItemdataをコンポーネントのItemdataとしてマッピング
     ...mapState(['materials']),
@@ -101,7 +103,8 @@ export default {
   display: flex;
   align-items: center;
   gap: 10px;
-  cursor: pointer; /* クリック可能であることを示すカーソル */
+  cursor: pointer;
+  /* クリック可能であることを示すカーソル */
 }
 
 .item-name span {
@@ -116,6 +119,7 @@ export default {
   display: flex;
   width: 100%;
   flex-grow: 1;
+  /* 各セクション間の隙間を設定 */
 }
 
 .data-section {
@@ -123,12 +127,33 @@ export default {
 }
 
 .data-section-1 {
-  flex: 0 0 40%; /* 幅を50%に設定 */
+  flex: 0 0 50%;
+  /* 幅を50%に設定 */
 }
 
-.data-section-2,
-.data-section-3 {
-  flex: 0 0 30%; /* 幅を25%に設定 */
+.data-section-2 {
+  flex: 0 0 50%;
+  /* 幅を25%に設定 */
+  display: flex;
+  flex-direction: column;
+  /* 子要素を縦に並べる */
+  gap: 10px;
+  /* 各セクション間の隙間を設定 */
+}
+
+.half-section {
+  flex: 1;
+  /* 高さを均等に分割 */
+  display: flex;
+  flex-direction: column;
+  /* 必要に応じて子要素を縦に並べる */
+  justify-content: center;
+  /* 子要素を中央に配置 */
+  align-items: center;
+  /* 子要素を中央に配置 */
+  border: 1px solid #ccc;
+  /* 境界線を設定 */
+  padding: 10px;
+  /* パディングを追加 */
 }
 </style>
-

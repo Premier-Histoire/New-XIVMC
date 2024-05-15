@@ -44,8 +44,9 @@
       </li>
       <li v-if="loading || totalPrice === undefined" class="treeview-price">
         <div class="treeview-item">
+          <i class="icon-blank"></i>
+          <i class="material-icon"></i>
           <span class="treeview-folder border-top border-dark">
-            <span style="width:48px;"></span>
             <span class="material-info">
               <span class="material-name"></span>
               <span class="material-amount">価格</span>
@@ -58,6 +59,8 @@
       </li>
       <li v-else class="treeview-price">
         <div class="treeview-item">
+          <i class="icon-blank"></i>
+          <i class="material-icon"></i>
           <span class="treeview-folder border-top border-dark">
             <span style="width:48px;"></span>
             <span class="material-info">
@@ -70,8 +73,9 @@
       </li>
       <li v-if="loading || mainMaterialPrice === undefined || mainMaterialPrice === 0" class="treeview-price">
         <div class="treeview-item">
+          <i class="icon-blank"></i>
+          <i class="material-icon"></i>
           <span class="treeview-folder">
-            <span style="width:48px;"></span>
             <span class="material-info">
               <span class="material-name"></span>
               <span class="material-amount">相場</span>
@@ -84,8 +88,9 @@
       </li>
       <li v-else class="treeview-price">
         <div class="treeview-item">
+          <i class="icon-blank"></i>
+          <i class="material-icon"></i>
           <span class="treeview-folder">
-            <span style="width:48px;"></span>
             <span class="material-info">
               <span class="material-name"></span>
               <span class="material-amount">相場</span>
@@ -96,8 +101,9 @@
       </li>
       <li v-if="!loading && mainMaterialPrice !== undefined && mainMaterialPrice !== 0" class="treeview-price">
         <div class="treeview-item">
+          <i class="icon-blank"></i>
+          <i class="material-icon"></i>
           <span class="treeview-folder">
-            <span style="width:48px;"></span>
             <span class="material-info">
               <span class="material-name"></span>
               <span class="material-amount">利益率</span>
@@ -108,8 +114,9 @@
       </li>
       <li v-else class="treeview-price">
         <div class="treeview-item">
+          <i class="icon-blank"></i>
+          <i class="material-icon"></i>
           <span class="treeview-folder">
-            <span style="width:48px;"></span>
             <span class="material-info">
               <span class="material-name"></span>
               <span class="material-amount">利益率</span>
@@ -445,10 +452,24 @@ export default {
     padding-left: 3rem;
   }
 
+  .treeview-folder {
+    height: 40px;
+  }
+
   .treeview-item {
     padding-left: 0rem;
     padding-right: 1.5rem;
     padding-bottom: 10px;
+  }
+
+  .icon-plus,
+  .icon-minus,
+  .icon-blank {
+    width: 40px;
+    height: 40px;
+    display: inline-block;
+    text-align: center;
+    flex-shrink: 0;
   }
 
   .material-icon {
@@ -481,5 +502,4 @@ export default {
     height: 24px;
   }
 }
-
 </style>
