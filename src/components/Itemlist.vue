@@ -65,7 +65,11 @@ export default {
     ...mapState(['saveItemData']),
     handleItemClick(item) {
       this.extractMaterials(item);
+      item.lastFetched = Date.now(); // 取得日時秒を追加
       this.$store.dispatch('saveItemData', item);
+      this.$store.dispatch('setClicked', true);
+      this.$store.dispatch('setClickedsale', true);
+      this.$store.dispatch('setClickedbuy', true);
       this.$emit('item-clicked');
     },
     ...mapState(['saveMaterials']),

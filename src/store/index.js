@@ -10,7 +10,10 @@ export default createStore({
     sidebarOpen: false,
     Itemdata: savedItemData ? JSON.parse(savedItemData) : [],
     rightContentVisible: true,
-    materials: savedMaterials ? JSON.parse(savedMaterials) : [] // クッキーからデータを読み込む
+    materials: savedMaterials ? JSON.parse(savedMaterials) : [], // クッキーからデータを読み込む
+    clicked: false,
+    clickedsale: false,
+    clickedbuy: false
   },
   mutations: {
     toggleSidebar(state) {
@@ -33,6 +36,15 @@ export default createStore({
 
       // クッキーにデータを保存
       Cookies.set('materials', JSON.stringify(materials), { expires: 7 });
+    },
+    setClicked(state, value) {
+      state.clicked = value;
+    },
+    setClickedsale(state, value) {
+      state.clickedsale = value;
+    },
+    setClickedbuy(state, value) {
+      state.clickedbuy = value;
     }
   },
   actions: {
@@ -44,9 +56,26 @@ export default createStore({
     },
     saveMaterials({ commit }, materials) {
       commit('saveMaterials', materials);
+    },
+    setClicked({ commit }, value) {
+      commit('setClicked', value);
+    },
+    setClickedsale({ commit }, value) {
+      commit('setClickedsale', value);
+    },
+    setClickedbuy({ commit }, value) {
+      commit('setClickedbuy', value);
     }
   },
   getters: {
-
+    clicked(state) {
+      return state.clicked;
+    },
+    clickedsale(state) {
+      return state.clickedsale;
+    },
+    clickedbuy(state) {
+      return state.clickedbuy;
+    }
   }
 });

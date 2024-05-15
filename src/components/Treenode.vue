@@ -10,7 +10,7 @@
             <span class="material-info">
               <span class="material-name">{{ material.materialName }}</span>
               <span class="material-amount">{{ material.materialAmount }}個</span>
-              <span v-if="material.totalPrice !== undefined" class="material-price"
+              <span v-if="material.totalPrice !== undefined && !isNaN(material.totalPrice)" class="material-price"
                 :style="{ color: isCreatePriceCheaper(material) ? 'red' : 'inherit' }">
                 {{ formatNumber(material.totalPrice) }} <i class="xiv gil"></i>
               </span>
@@ -20,13 +20,31 @@
             </span>
           </span>
         </div>
+        <!-- 再帰的に素材を表示 -->
         <ul v-show="material.expanded && material.materials && material.materials.length > 0" class="treeview-row">
-          <tree-node :materials="material.materials" :key="material.id"></tree-node>
+          <li v-for="(subMaterial, subIndex) in material.materials" :key="subIndex">
+            <div class="treeview-item">
+              <span class="treeview-folder">
+                <img :src="getImageUrl(subMaterial.materialIcon)" alt="Material Icon" class="material-icon">
+                <span class="material-info">
+                  <span class="material-name">{{ subMaterial.materialName }}</span>
+                  <span class="material-amount">{{ subMaterial.materialAmount }}個</span>
+                  <span v-if="subMaterial.totalPrice !== undefined && !isNaN(subMaterial.totalPrice)"
+                    class="material-price" :style="{ color: isCreatePriceCheaper(subMaterial) ? 'red' : 'inherit' }">
+                    {{ formatNumber(subMaterial.totalPrice) }} <i class="xiv gil"></i>
+                  </span>
+                  <span v-else class="loading-container">
+                    <span class="loading-spinner"></span>
+                  </span>
+                </span>
+              </span>
+            </div>
+          </li>
         </ul>
       </li>
       <li v-if="loading || totalPrice === undefined" class="treeview-price">
         <div class="treeview-item">
-          <span class="treeview-folder">
+          <span class="treeview-folder border-top border-dark">
             <span style="width:48px;"></span>
             <span class="material-info">
               <span class="material-name"></span>
@@ -40,7 +58,7 @@
       </li>
       <li v-else class="treeview-price">
         <div class="treeview-item">
-          <span class="treeview-folder">
+          <span class="treeview-folder border-top border-dark">
             <span style="width:48px;"></span>
             <span class="material-info">
               <span class="material-name"></span>
@@ -50,9 +68,60 @@
           </span>
         </div>
       </li>
+      <li v-if="loading || mainMaterialPrice === undefined || mainMaterialPrice === 0" class="treeview-price">
+        <div class="treeview-item">
+          <span class="treeview-folder">
+            <span style="width:48px;"></span>
+            <span class="material-info">
+              <span class="material-name"></span>
+              <span class="material-amount">相場</span>
+              <span class="loading-container">
+                <span class="loading-spinner"></span>
+              </span>
+            </span>
+          </span>
+        </div>
+      </li>
+      <li v-else class="treeview-price">
+        <div class="treeview-item">
+          <span class="treeview-folder">
+            <span style="width:48px;"></span>
+            <span class="material-info">
+              <span class="material-name"></span>
+              <span class="material-amount">相場</span>
+              <span class="material-price">{{ formatNumber(mainMaterialPrice) }} <i class="xiv gil"></i></span>
+            </span>
+          </span>
+        </div>
+      </li>
+      <li v-if="!loading && mainMaterialPrice !== undefined && mainMaterialPrice !== 0" class="treeview-price">
+        <div class="treeview-item">
+          <span class="treeview-folder">
+            <span style="width:48px;"></span>
+            <span class="material-info">
+              <span class="material-name"></span>
+              <span class="material-amount">利益率</span>
+              <span class="material-price">{{ formatNumber((mainMaterialPrice / totalPrice * 100).toFixed(2)) }}%</span>
+            </span>
+          </span>
+        </div>
+      </li>
+      <li v-else class="treeview-price">
+        <div class="treeview-item">
+          <span class="treeview-folder">
+            <span style="width:48px;"></span>
+            <span class="material-info">
+              <span class="material-name"></span>
+              <span class="material-amount">利益率</span>
+              <span class="material-price">{{ formatNumber(mainMaterialPrice) }} %</span>
+            </span>
+          </span>
+        </div>
+      </li>
     </ul>
   </div>
 </template>
+
 
 <script>
 import { mapState } from 'vuex';
@@ -69,11 +138,12 @@ export default {
   data() {
     return {
       loading: true,
-      totalPrice: 0
+      totalPrice: 0,
+      mainMaterialPrice: 0,
     };
   },
   computed: {
-    ...mapState(['Itemdata']),
+    ...mapState(['Itemdata', 'clicked']),
   },
   methods: {
     async toggleNode(material) {
@@ -126,6 +196,25 @@ export default {
         console.error('価格情報の取得に失敗しました:', error);
         material.marketPrice = '取得失敗';
         this.updateMaterialPrice(material); // 取得失敗時も価格を更新する
+        if (retryCount < maxRetries) {
+          console.log(`再試行中 (${retryCount + 1}/${maxRetries})...`);
+          await this.sleep(1000);
+          await this.fetchMarketPrice(material, retryCount + 1);
+        }
+      }
+    },
+    async fetchMainMaterialPrice() { // ItemId を引数から削除
+      const maxRetries = 3;
+      const server = 'JAPAN';
+      const ItemId = this.Itemdata.ItemId; // ItemId を Vuex から取得
+      const url = `https://universalis.app/api/v2/${server}/${ItemId}?fields=minPrice`;
+
+      try {
+        const response = await axios.get(url);
+        this.mainMaterialPrice = response.data.minPrice || '価格情報なし';
+      } catch (error) {
+        console.error('本体の価格情報の取得に失敗しました:', error);
+        this.mainMaterialPrice = '取得失敗';
         if (retryCount < maxRetries) {
           console.log(`再試行中 (${retryCount + 1}/${maxRetries})...`);
           await this.sleep(1000);
@@ -193,16 +282,19 @@ export default {
     }
   },
   watch: {
-    Itemdata: {
-      handler(newData, oldData) {
-        // ItemData の変更を検知して、loading フラグを true にし、市場価格を取得する
-        if (newData !== oldData) {
+    clicked: {
+      handler(newVal) {
+        if (newVal) {
           this.loading = true;
           this.fetchMarketPrices();
+          this.fetchMainMaterialPrice();
+          this.$store.dispatch('setClicked', false);
+        } else {
+          // clicked が false になったときの処理を行う
         }
       },
-      deep: true
-    }
+      immediate: true // コンポーネントの初期化時にも監視対象の変数を評価する
+    },
   },
   created() {
     this.fetchMarketPrices();
@@ -219,7 +311,7 @@ export default {
 
 .treeview-row {
   list-style: none;
-  padding-left: 0;
+  padding-left: 2rem;
 }
 
 .treeview-row .treeview {

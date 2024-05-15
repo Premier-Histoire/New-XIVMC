@@ -26,7 +26,9 @@
                 </div>
             </div>
             <div class="item-data">
-                <Treenode :materials="materials"></Treenode>
+                <Treenode :materials="materials" />
+                <Buyhistory />
+                <Salehistory />
             </div>
         </div>
         <!-- トップに戻るボタン -->
@@ -44,18 +46,22 @@
 import { mapState } from 'vuex';
 import store from '@/store'; // ストアをインポート
 import Treenode from './Treenode.vue';
+import Salehistory from './Salehistory.vue';
+import Buyhistory from './Buyhistory.vue';
 
 export default {
     components: {
-        Treenode
+        Treenode,
+        Salehistory,
+        Buyhistory
     },
     computed: {
         ...mapState(['Itemdata']), // ストアのItemdataをコンポーネントのItemdataとしてマッピング
-        ...mapState(['materials'])
+        ...mapState(['materials']),
     },
     data() {
         return {
-            isTop: true // スクロール位置がトップにあるかどうかのフラグ
+            isTop: true, // スクロール位置がトップにあるかどうかのフラグ
         };
     },
     methods: {
@@ -97,7 +103,7 @@ export default {
                 .catch(err => {
                     console.error('テキストのコピーに失敗しました：', err);
                 });
-        }
+        },
     },
 };
 </script>
