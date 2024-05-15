@@ -21,8 +21,8 @@
                         <td><i v-if="listings.hq" class="xiv hq"></i></td>
                         <td>{{ formatPrice(listings.pricePerUnit) }}</td>
                         <td>{{ listings.quantity }}</td>
-                        <td>{{ listings.tax }}</td>
-                        <td>{{ listings.total }}</td>
+                        <td>{{ formatPrice(listings.tax) }}</td>
+                        <td>{{ formatPrice(listings.total) }}</td>
                     </tr>
                     <!-- 売上履歴がない場合の表示 -->
                     <tr v-if="listings.length === 0">
@@ -59,9 +59,6 @@ export default {
             } catch (error) {
                 console.error('売上履歴の取得に失敗しました:', error);
             }
-        },
-        formatTimestamp(timestamp) {
-            return timestamp; // ここでは既に日付に変換されたものが渡されるので、そのまま返す
         },
         formatPrice(price) {
             // 価格にコンマを挿入する
