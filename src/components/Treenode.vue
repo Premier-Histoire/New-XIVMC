@@ -10,9 +10,13 @@
             <span class="material-info">
               <span class="material-name">{{ material.materialName }}</span>
               <span class="material-amount">{{ material.materialAmount }}個</span>
-              <span v-if="material.price" class="material-price">{{ formatNumber(material.price *
-                material.materialAmount) }} <i class="xiv gil"></i></span>
-              <span v-else class="loading-container"><span class="loading-spinner"></span></span> <!-- ローディング画像 -->
+              <span v-if="material.totalPrice !== undefined" class="material-price"
+                :style="{ color: isCreatePriceCheaper(material) ? 'red' : 'inherit' }">
+                {{ formatNumber(material.totalPrice) }} <i class="xiv gil"></i>
+              </span>
+              <span v-else class="loading-container">
+                <span class="loading-spinner"></span>
+              </span>
             </span>
           </span>
         </div>
@@ -20,14 +24,28 @@
           <tree-node :materials="material.materials" :key="material.id"></tree-node>
         </ul>
       </li>
-      <li v-if="!loading" class="treeview-price">
+      <li v-if="loading || totalPrice === undefined" class="treeview-price">
         <div class="treeview-item">
           <span class="treeview-folder">
             <span style="width:48px;"></span>
             <span class="material-info">
               <span class="material-name"></span>
               <span class="material-amount">価格</span>
-              <span v-if="!loading" class="material-price">{{ formatNumber(totalPrice) }} <i class="xiv gil"></i></span>
+              <span class="loading-container">
+                <span class="loading-spinner"></span>
+              </span>
+            </span>
+          </span>
+        </div>
+      </li>
+      <li v-else class="treeview-price">
+        <div class="treeview-item">
+          <span class="treeview-folder">
+            <span style="width:48px;"></span>
+            <span class="material-info">
+              <span class="material-name"></span>
+              <span class="material-amount">価格</span>
+              <span class="material-price">{{ formatNumber(totalPrice) }} <i class="xiv gil"></i></span>
             </span>
           </span>
         </div>
@@ -37,6 +55,7 @@
 </template>
 
 <script>
+import { mapState } from 'vuex';
 import axios from 'axios';
 
 export default {
@@ -49,67 +68,112 @@ export default {
   },
   data() {
     return {
-      loading: true, // APIリクエストのローディング状態を追加
+      loading: true,
       totalPrice: 0
     };
+  },
+  computed: {
+    ...mapState(['Itemdata']),
   },
   methods: {
     async toggleNode(material) {
       material.expanded = !material.expanded;
-      if (material.expanded && !material.loaded) {
-        await this.fetchSubMaterialsPrices(material);
-      }
     },
     getImageUrl(icon) {
       const normalizedIcon = String(icon).slice(0, -3) + '000';
       return `https://xivapi.com/i/0${normalizedIcon}/0${icon}.png`;
     },
-    async fetchMarketPrices() {
-      const requests = this.materials.map(material => {
-        if (material.materialIcon && !material.price) {
-          return this.fetchMarketPrice(material);
-        }
-      });
-      await this.limitRequests(requests, 25); // APIリクエストのレート制限を尊重
-      this.loading = false; // ローディング状態を終了
-      this.calculateTotalPrice();
-    },
-    async fetchSubMaterialsPrices(material) {
-      const requests = material.materials.map(subMaterial => {
-        if (subMaterial.materialIcon && !subMaterial.price) {
-          return this.fetchMarketPrice(subMaterial);
-        }
-      });
-      await this.limitRequests(requests, 25); // APIリクエストのレート制限を尊重
-      material.loaded = true; // サブ素材の価格取得が完了したらloadedフラグを設定
-    },
     async limitRequests(requests, limit) {
       const chunks = this.chunkArray(requests, limit);
       for (const chunk of chunks) {
         await Promise.all(chunk);
-        await this.sleep(1000); // 1秒ごとにリクエストを送信することでレート制限を尊重
+        await this.sleep(1000);
       }
     },
-    fetchMarketPrice(material) {
+    async fetchMarketPrices() {
+      const requests = this.materials.map(async material => {
+        if (material.materialIcon && material.price === undefined) {
+          await this.fetchMarketPrice(material);
+          await this.fetchSubMaterialsPrices(material);
+        }
+      });
+      await this.limitRequests(requests, 25);
+      this.loading = false;
+      this.calculateTotalPrice();
+    },
+    async fetchSubMaterialsPrices(material) {
+      const requests = material.materials.map(subMaterial => {
+        if (subMaterial.materialIcon && subMaterial.price === undefined) {
+          return this.fetchMarketPrice(subMaterial);
+        }
+      });
+      await this.limitRequests(requests, 25);
+      material.loaded = true;
+
+      this.updateMaterialPrice(material);
+      this.calculateTotalPrice();
+    },
+    async fetchMarketPrice(material, retryCount = 0) {
+      const maxRetries = 3;
       const server = 'JAPAN';
       const url = `https://universalis.app/api/v2/${server}/${material.materialId}?fields=minPrice`;
-      return axios.get(url)
-        .then(response => {
-          material.price = response.data.minPrice || '価格情報なし';
-        })
-        .catch(error => {
-          console.error('価格情報の取得に失敗しました:', error);
-          material.price = '取得失敗';
-        });
+
+      try {
+        const response = await axios.get(url);
+        material.marketPrice = response.data.minPrice || '価格情報なし';
+        this.updateMaterialPrice(material);
+      } catch (error) {
+        console.error('価格情報の取得に失敗しました:', error);
+        material.marketPrice = '取得失敗';
+        this.updateMaterialPrice(material); // 取得失敗時も価格を更新する
+        if (retryCount < maxRetries) {
+          console.log(`再試行中 (${retryCount + 1}/${maxRetries})...`);
+          await this.sleep(1000);
+          await this.fetchMarketPrice(material, retryCount + 1);
+        }
+      }
+    },
+    updateMaterialPrice(material) {
+      if (material.materials && material.materials.length > 0) {
+        const subMaterialsPrice = material.materials.reduce((sum, subMaterial) => {
+          return sum + (subMaterial.marketPrice * subMaterial.materialAmount);
+        }, 0);
+
+        const createPrice = Math.ceil(subMaterialsPrice / (material.materialAmountResult || 1));
+
+        material.CreatePrice = createPrice;
+        material.totalPrice = createPrice * material.materialAmount;
+      } else {
+        material.CreatePrice = Math.ceil(material.marketPrice);
+        material.totalPrice = material.marketPrice * material.materialAmount;
+      }
     },
     calculateTotalPrice() {
       let totalPrice = 0;
       this.materials.forEach(material => {
-        if (material.price) {
-          totalPrice += material.price * material.materialAmount;
-        }
+        totalPrice += material.totalPrice;
       });
       this.totalPrice = totalPrice;
+    },
+    getUnitPrice(material) {
+      console.log(material);
+      if (material.marketPrice === '取得失敗' || material.marketPrice === '価格情報なし') {
+        return material.marketPrice;
+      }
+
+      // CreatePriceが定義されている場合、より安い方を選択してmaterialAmountをかける
+      if (material.CreatePrice !== undefined) {
+        return Math.min(material.marketPrice, material.CreatePrice) * material.materialAmount;
+      } else {
+        return material.marketPrice * material.materialAmount;
+      }
+    },
+    isCreatePriceCheaper(material) {
+      if (material.CreatePrice !== undefined) {
+        return material.CreatePrice < material.marketPrice;
+      } else {
+        return false; // CreatePriceが未定義の場合はmarketPriceが安いとみなす
+      }
     },
     chunkArray(arr, size) {
       const chunks = [];
@@ -122,16 +186,22 @@ export default {
       return new Promise(resolve => setTimeout(resolve, ms));
     },
     formatNumber(number) {
-      return number.toLocaleString(); // 数値をフォーマットする
+      if (number === '取得失敗' || number === '価格情報なし') {
+        return number;
+      }
+      return number.toLocaleString();
     }
   },
   watch: {
-    materials: {
-      handler() {
-        this.loading = true; // データの変更が検出されたらローディング状態を再度セット
-        this.fetchMarketPrices(); // マーケット価格を再度取得
+    Itemdata: {
+      handler(newData, oldData) {
+        // ItemData の変更を検知して、loading フラグを true にし、市場価格を取得する
+        if (newData !== oldData) {
+          this.loading = true;
+          this.fetchMarketPrices();
+        }
       },
-      deep: true // materials内のプロパティの変更も監視する
+      deep: true
     }
   },
   created() {
@@ -160,6 +230,7 @@ export default {
 .treeview-item {
   cursor: pointer;
   padding-left: 1rem;
+  padding-right: 1rem;
   display: flex;
   flex-wrap: nowrap;
   align-items: center;
@@ -242,6 +313,7 @@ export default {
 }
 
 .loading-container {
+  position: relative;
   width: 100px;
   height: 20px;
 }
@@ -249,11 +321,15 @@ export default {
 .loading-spinner {
   display: flex;
   align-items: center;
-}
-
-.loading-spinner i {
+  position: absolute;
+  right: 0;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  border: 2px solid #ccc;
+  border-radius: 50%;
+  border-top: 2px solid #3498db;
   animation: spin 1s linear infinite;
-  /* スピンアニメーション */
 }
 
 @keyframes spin {
@@ -265,14 +341,4 @@ export default {
     transform: rotate(360deg);
   }
 }
-
-.loading-spinner {
-  width: 20px;
-  height: 20px;
-  border: 2px solid #ccc;
-  border-radius: 50%;
-  border-top: 2px solid #3498db;
-  animation: spin 1s linear infinite;
-}
-
 </style>

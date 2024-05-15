@@ -86,6 +86,7 @@ export default {
               if (recipe[ingredientKey] !== "0" && recipe[amountKey] !== "0") {
                 const subMaterialId = recipe[ingredientKey];
                 const subMaterialAmount = recipe[amountKey];
+                const AmountResult = recipe['AmountResult'];
 
                 // Item.jsonから素材の名前を取得
                 const subMaterial = this.items.find(item => item.ItemId === subMaterialId);
@@ -100,6 +101,7 @@ export default {
                   materialIcon: subMaterialIconId,
                   materialName: subMaterialName,
                   materialAmount: subMaterialAmount,
+                  materialAmountResult: AmountResult,
                   materials: subSubMaterials
                 });
               }
@@ -123,6 +125,10 @@ export default {
               const materialId = recipe[ingredientKey];
               const amount = recipe[amountKey];
 
+              // RecipeDataからAmountResultを取得
+              const materialRecipe = this.recipeData.find(r => r.ItemResult === materialId);
+              const AmountResult = materialRecipe ? materialRecipe.AmountResult : 1; // AmountResultが見つからない場合はデフォルト値1を使用
+
               // Item.jsonから素材の名前を取得
               const material = this.items.find(item => item.ItemId === materialId);
               const materialIcon = material ? material.Icon : "Unknown";
@@ -136,6 +142,7 @@ export default {
                 materialIcon: materialIcon,
                 materialName: materialName,
                 materialAmount: amount,
+                materialAmountResult: AmountResult,
                 materials: subMaterials // 素材のリストは再帰的に取得した素材のリスト
               });
             }
@@ -148,7 +155,7 @@ export default {
       this.$store.dispatch('saveMaterials', this.materials);
     },
     isCraftable(itemId) {
-      return RecipeData.some(recipe => recipe.ItemResult.includes(itemId));
+      return this.recipeData.some(recipe => recipe.ItemResult.includes(itemId));
     }
   }
 };
